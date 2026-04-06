@@ -1,0 +1,12 @@
+# --- Seguridad ---
+.env
+.env.local
+.env.dev.local
+.env.test.local
+.env.prod.local
+
+# --- Herramientas de Sistema / IDEs ---
+.idea/
+.vscode/
+.DS_Store
+*.log

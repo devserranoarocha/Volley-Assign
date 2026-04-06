@@ -1,0 +1,77 @@
+services:
+  backend:
+    build:
+      context: ./symfony-backend
+      dockerfile: ./docker/php/Dockerfile
+    container_name: volley_backend
+    restart: unless-stopped
+    working_dir: /var/www/app
+    volumes:
+      - ./symfony-backend:/var/www/app
+    environment:
+      DB_USER: ${DB_USER}
+      DB_NAME: ${DB_NAME}
+      DATABASE_URL: "postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?serverVersion=13&charset=utf8"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    command: >
+      bash -c "
+        until pg_isready -h db -U ${DB_USER} -d postgres; do
+          sleep 2;
+        done;
+        
+        if [ ! -f /var/www/app/vendor/autoload.php ]; then
+          composer install;
+        fi
+        
+        php bin/console doctrine:database:create --if-not-exists;
+        php bin/console doctrine:schema:update --force;
+
+        if symfony server:status > /dev/null 2>&1; then
+          symfony server:stop;
+        fi
+
+        symfony server:start --no-tls --port=8000 --allow-all-ip;
+      "
+
+
+  db:
+    image: postgres:13
+    container_name: volley_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      DATABASE_URL: "postgresql://${DB_USER}:${DB_PASSWORD}@db:${DB_PORT}/${DB_NAME}?serverVersion=13&charset=utf8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./angular-frontend
+      dockerfile: Dockerfile
+    container_name: volley_frontend
+    restart: always
+    working_dir: /app
+    volumes:
+      - ./angular-frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    ports:
+      - "4200:4200"
+    command: ["sh", "-c", "npm install && ng serve --host 0.0.0.0 --poll 2000 --watch"]
+
+
+volumes:
+  pgdata:
