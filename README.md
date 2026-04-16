@@ -55,8 +55,7 @@ Como aspirante a Desarrollador Backend PHP, este proyecto ha sido el escenario p
 graph LR
     A[Angular Client] -- JWT Auth --> B(Symfony API)
     B -- Doctrine ORM --> C[(PostgreSQL)]
-    B -- FileSystem --> D[Images Storage]
-    
+        
     style B fill:#000,stroke:#fff,stroke-width:2px,color:#fff
     style C fill:#336791,stroke:#fff,color:#fff
 ```
