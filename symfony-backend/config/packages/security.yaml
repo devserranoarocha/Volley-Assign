@@ -1,3 +1,45 @@
+# security:
+#     # Máxima seguridad automática para hashear contraseñas (Argon2id/Bcrypt)
+#     password_hashers:
+#         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+
+#     providers:
+#         app_user_provider:
+#             entity:
+#                 class: App\Entity\User
+#                 property: email
+
+#     firewalls:
+#         dev:
+#             pattern: ^/(_(profiler|wdt)|css|images|js)/
+#             security: false
+
+#         # 1. Cortafuegos específico para el Login
+#         login:
+#             pattern: ^/api/login
+#             stateless: true
+#             json_login:
+#                 check_path: /api/login_check
+#                 success_handler: lexik_jwt_authentication.handler.authentication_success
+#                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
+
+#         # 2. Cortafuegos principal de la API protegido por JWT
+#         api:
+#             pattern: ^/api
+#             stateless: true
+#             jwt: ~
+
+#     # Control de acceso jerárquico
+#     access_control:
+#         # Permitir registro y login de forma totalmente pública
+#         - { path: ^/api/register, roles: PUBLIC_ACCESS }
+#         - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        
+#         # Todo lo demás dentro de la API requerirá estar autenticado
+#         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
+
+# config/packages/security.yaml
+
 security:
     # Máxima seguridad automática para hashear contraseñas (Argon2id/Bcrypt)
     password_hashers:
@@ -35,5 +77,11 @@ security:
         - { path: ^/api/register, roles: PUBLIC_ACCESS }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         
-        # Todo lo demás dentro de la API requerirá estar autenticado
+        # 1. PERMITIR CONSULTAS (GET): Tanto gestores como árbitros pueden listar y ver detalles
+        - { path: ^/api/availability-requests, methods: [GET], roles: [ROLE_GESTOR, ROLE_ADMIN, ROLE_REFEREE] }
+        
+        # 2. RESTRINGIR ESCRITURA (POST, PUT, DELETE): Solo para gestores y administradores
+        - { path: ^/api/availability-requests, roles: [ROLE_GESTOR, ROLE_ADMIN] }
+        
+        # Todo lo demás dentro de la API requerirá estar autenticado de forma general
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
