@@ -34,7 +34,6 @@ class Referee
     #[ORM\Column(length: 255)]
     private ?string $others = null;
 
-    // Nota: Corregido length en enteros ya que no aplica nativamente en tipos int de Doctrine
     #[ORM\Column]
     private ?int $season_counter = null;
 
@@ -43,7 +42,7 @@ class Referee
 
     // 1. Añadimos la relación OneToOne con la entidad User
     #[ORM\OneToOne(targetEntity: User::class, cascade: ['persist', 'remove'])]
-    #[ORM\JoinColumn(name: "user_id", referencedColumnName: "id", nullable: true, onDelete: "SET NULL")]
+    #[ORM\JoinColumn(name: "user_id", nullable: true, onDelete: "SET NULL")]
     private ?User $user = null;
 
     public function getId(): ?int

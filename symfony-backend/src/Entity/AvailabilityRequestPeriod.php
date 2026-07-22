@@ -25,10 +25,10 @@ class AvailabilityRequestPeriod
     private ?\DateTimeInterface $date = null;
 
     #[ORM\Column(length: 50)]
-    private ?string $period = null; // Ej: "Mañana", "Tarde"
+    private ?string $period = null;
 
-    // Relación inversa con las respuestas de los árbitros (para más adelante)
-    #[ORM\OneToMany(mappedBy: 'period', targetEntity: RefereeResponse::class)]
+    // 1. Añadido 'cascade: ['remove']' y 'orphanRemoval: true'
+    #[ORM\OneToMany(mappedBy: 'period', targetEntity: RefereeResponse::class, cascade: ['remove'], orphanRemoval: true)]
     private Collection $refereeResponses;
 
     public function __construct()
@@ -71,6 +71,39 @@ class AvailabilityRequestPeriod
     public function setPeriod(string $period): self
     {
         $this->period = $period;
+        return $this;
+    }
+
+    // ------------------------------------------------------------------
+    // 2. NUEVOS MÉTODOS AÑADIDOS PARA MANEJAR RESPUESTAS DE ÁRBITROS
+    // ------------------------------------------------------------------
+
+    /**
+     * @return Collection<int, RefereeResponse>
+     */
+    public function getRefereeResponses(): Collection
+    {
+        return $this->refereeResponses;
+    }
+
+    public function addRefereeResponse(RefereeResponse $refereeResponse): self
+    {
+        if (!$this->refereeResponses->contains($refereeResponse)) {
+            $this->refereeResponses->add($refereeResponse);
+            $refereeResponse->setPeriod($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRefereeResponse(RefereeResponse $refereeResponse): self
+    {
+        if ($this->refereeResponses->removeElement($refereeResponse)) {
+            if ($refereeResponse->getPeriod() === $this) {
+                $refereeResponse->setPeriod(null);
+            }
+        }
+
         return $this;
     }
 }
